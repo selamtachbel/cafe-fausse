@@ -1,5 +1,6 @@
 # backend/app.py
 import os
+from flask_cors import CORS
 from datetime import datetime
 
 from flask import Flask, request, jsonify
@@ -21,14 +22,14 @@ app = Flask(__name__)
 CORS(app)
 
 # ---- initialize schema once on boot from schema.sql ----
-def init_db():
+def init_db(): 
     schema_path = os.path.join(os.path.dirname(__file__), "schema.sql")
     with open(schema_path, "r", encoding="utf-8") as f:
         ddl = f.read()
     with engine.begin() as conn:
         conn.execute(text(ddl))
 
-init_db()
+init_db() #init_db()
 
 # --------------------------- helpers ---------------------------
 
@@ -188,7 +189,8 @@ def newsletter():
 
     return jsonify({"message": "subscribed"}), 200
 
-
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 if __name__ == "__main__":
-    # run dev server
-    app.run(debug=True)
+    from flask_cors import CORS
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    app.run()
