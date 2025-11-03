@@ -93,19 +93,24 @@ def admin_reservations():
 
     with engine.begin() as conn:
         rows = conn.execute(text("""
-            SELECT r.id, r.time_slot, r.guests, r.table_number, r.name, r.email, r.phone
+            SELECT r.id, r.time_slot, r.guests, r.table_number,
+                   c.name, c.email, c.phone
             FROM reservations r
+            JOIN customers c ON c.id = r.customer_id
             ORDER BY r.id DESC
-        """))
+            LIMIT 200
+        """)).mappings().all()
 
-        data = [dict(row) for row in rows]
-        return jsonify(data), 200
+    return jsonify(list(rows)), 200
 
 # ----------------- HEALTH CHECK -----------------
 
 @app.get("/")
 def home():
     return jsonify({"status": "running"}), 200
+@app.get("/api/health")
+def health():
+    return jsonify({"status": "ok"}), 200
 
 # Run local
 if __name__ == "__main__":
