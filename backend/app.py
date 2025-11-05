@@ -21,7 +21,8 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}},
+     )
 
 # Create DB tables from schema.sql
 def init_db():
@@ -108,10 +109,10 @@ def admin_reservations():
 @app.get("/")
 def home():
     return jsonify({"status": "running"}), 200
-@app.get("/api/health")
+# ---- HEALTH CHECK ----
+@app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"}), 200
-
 # Run local
 if __name__ == "__main__":
     app.run(debug=True)
