@@ -147,6 +147,12 @@ def log_routes():
     app.logger.info("ROUTES: %s", rules)
 
 log_routes()
+# --- ONE TIME DB FIX ---
+with engine.begin() as conn:
+    conn.execute(text("""
+        ALTER TABLE customers
+        ADD CONSTRAINT unique_email UNIQUE (email);
+    """))
 
 if __name__ == "__main__":
     app.run(debug=True)
