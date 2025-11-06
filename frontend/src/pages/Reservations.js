@@ -28,7 +28,7 @@ export default function Reservations() {
       const time24 = to24h ? to24h(form.time) : form.time;
       const time_slot = `${dateISO} ${time24}:00`;
 
-      await api("/reserve", {
+      await api("/api/reserve", {
         method: "POST",
         body: JSON.stringify({
           name: form.name,

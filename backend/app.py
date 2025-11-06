@@ -15,6 +15,12 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # app
 app = Flask(__name__)
+@app.after_request
+def add_headers(r):
+    r.headers["Access-Control-Allow-Origin"] = "*"
+    r.headers["Access-Control-Allow-Headers"] = "Content-Type, x-admin-key"
+    r.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return r
 CORS(
     app,
     resources={r"/api/*": {"origins": "*"}},

@@ -1,35 +1,38 @@
 // frontend/src/shared/NewsletterForm.js
 import React, { useState } from "react";
-import { api } from "../shared/api";
+import api from "../shared/api";
 
 export default function NewsletterForm() {
-  const [name, setName]   = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName]   = useState("");
   const [phone, setPhone] = useState("");
-  const [msg, setMsg]     = useState(null);
+  const [msg, setMsg]     = useState("");
 
-  async function submit(e) {
+  async function subscribe(e) {
     e.preventDefault();
-    setMsg(null);
+    setMsg("");
     try {
-      await api("/newsletter", {
+      await api("/api/newsletter", {
         method: "POST",
-        body: JSON.stringify({ name, email, phone }),
+        data: { email, name, phone },
       });
-      setMsg({ type: "ok", text: "Subscribed. See you soon! 😊" });
-      setName(""); setEmail(""); setPhone("");
+      setMsg("Subscribed! ✅");
     } catch (err) {
-      setMsg({ type: "err", text: err.message || "Could not subscribe. Try again." });
+      console.error(err);
+      setMsg("Failed to subscribe.");
     }
   }
 
   return (
-    <form onSubmit={submit} className="form">
-      <input className="input" placeholder="Your name"  value={name}  onChange={(e)=>setName(e.target.value)} />
-      <input className="input" placeholder="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
-      <input className="input" placeholder="Phone (optional)" value={phone} onChange={(e)=>setPhone(e.target.value)} />
-      <button className="btn btn-primary" type="submit">Subscribe</button>
-      {msg && <div style={{ color: msg.type === "ok" ? "green" : "red" }}>{msg.text}</div>}
+    <form onSubmit={subscribe}>
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <button className="btn" type="submit">Subscribe</button>
+      {msg && <div className="notice">{msg}</div>}
     </form>
   );
 }
