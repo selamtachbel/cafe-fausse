@@ -171,12 +171,18 @@ def admin_customers():
 def home():
     return jsonify({"status": "running"}), 200
 
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return jsonify({"status": "ok"}), 200
 
-@app.get("/ping")
+@app.get("/api/ping")
 def ping():
     return jsonify({"pong": True}), 200
+@app.get("/api/version")
+def version():
+    return jsonify({
+        "v": "cafefausse-2025-11-06-1"   # any unique string
+    }), 200
 if __name__ == "__main__":
     app.run(debug=True)
+ 

@@ -7,7 +7,7 @@ const API_BASE =
     : "http://localhost:5000/api";
 
 export default function api(path, options = {}) {
-  const url = ${API_BASE}${path.startsWith("/") ? "" : "/"}${path};
+  const url = `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   return axios({ url, ...options, headers }).then(res => res.data);
 }
