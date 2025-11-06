@@ -183,6 +183,10 @@ def version():
     return jsonify({
         "v": "cafefausse-2025-11-06-1"   # any unique string
     }), 200
-if __name__ == "__main__":
-    app.run(debug=True)
+    # log all routes when the app starts (visible in Render logs)
+with app.app_context():
+    for r in app.url_map.iter_rules():
+        app.logger.info("ROUTE: %s %s", ",".join(sorted(r.methods - {'HEAD', 'OPTIONS'})), r.rule)
+# if __name__ == "__main__":
+  #  app.run(debug=True)
  
