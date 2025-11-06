@@ -1,37 +1,35 @@
-import { useState } from "react";
+// frontend/src/shared/NewsletterForm.js
+import React, { useState } from "react";
+import { api } from "../shared/api";
 
-export default function NewsletterForm(){
-  const [name, setName] = useState("");
+export default function NewsletterForm() {
+  const [name, setName]   = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [msg, setMsg] = useState(null);
+  const [msg, setMsg]     = useState(null);
 
-  async function submit(e){
+  async function submit(e) {
     e.preventDefault();
     setMsg(null);
-    try{
-      const res = await fetch("/api/newsletter", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ name, email, phone })
+    try {
+      await api("/newsletter", {
+        method: "POST",
+        body: JSON.stringify({ name, email, phone }),
       });
-      if(!res.ok) throw new Error("Failed");
-      setMsg({type:"ok", text:"Subscribed. See you soon! ☕️"});
+      setMsg({ type: "ok", text: "Subscribed. See you soon! 😊" });
       setName(""); setEmail(""); setPhone("");
-    }catch(err){
-      setMsg({type:"err", text:"Could not subscribe. Try again."});
+    } catch (err) {
+      setMsg({ type: "err", text: err.message || "Could not subscribe. Try again." });
     }
   }
 
   return (
-    <form className="form" onSubmit={submit}>
-      <input className="input" placeholder="Your name" value={name} onChange={e=>setName(e.target.value)} />
-      <input className="input" placeholder="Email" type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
-      <input className="input" placeholder="Phone (optional)" value={phone} onChange={e=>setPhone(e.target.value)} />
-      <div style={{display:"flex", gap:10}}>
-        <button className="btn btn-primary" type="submit">Subscribe</button>
-      </div>
-      {msg && <div className={msg.type==="ok"?"success":"error"}>{msg.text}</div>}
+    <form onSubmit={submit} className="form">
+      <input className="input" placeholder="Your name"  value={name}  onChange={(e)=>setName(e.target.value)} />
+      <input className="input" placeholder="Email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} />
+      <input className="input" placeholder="Phone (optional)" value={phone} onChange={(e)=>setPhone(e.target.value)} />
+      <button className="btn btn-primary" type="submit">Subscribe</button>
+      {msg && <div style={{ color: msg.type === "ok" ? "green" : "red" }}>{msg.text}</div>}
     </form>
   );
 }
