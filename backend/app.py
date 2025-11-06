@@ -15,6 +15,13 @@ engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # app
 app = Flask(__name__)
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import os
+
+app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 @app.after_request
 def add_headers(r):
     r.headers["Access-Control-Allow-Origin"] = "*"

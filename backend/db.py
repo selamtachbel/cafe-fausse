@@ -1,4 +1,5 @@
 import os
+import psycopg2
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 import os.path as p
