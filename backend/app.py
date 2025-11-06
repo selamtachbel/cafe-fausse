@@ -20,9 +20,23 @@ ADMIN_KEY = os.getenv("ADMIN_KEY", "12345").strip()
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Flask app
+from flask_cors import CORS
+
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}},
-     )
+CORS(
+    app,
+    resources={r"/api/*": {"origins": "*"}},
+    supports_credentials=False,
+    allow_headers=["Content-Type", "x-admin-key"],
+    methods=["GET", "POST", "OPTIONS"]
+)
+
+@app.after_request
+def add_headers(r):
+    r.headers["Access-Control-Allow-Origin"] = "*"
+    r.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Admin-Key"
+    r.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return r
 
 # Create DB tables from schema.sql
 def init_db():
@@ -60,13 +74,19 @@ def require_admin(req):
 
 @app.post("/api/reserve")
 def reserve():
-    data = request.json
-    slot = data.get("slot")
-    name = data.get("name")
-    email = data.get("email")
-    phone = data.get("phone")
-    guests = data.get("guests")
-    table_no = data.get("table")
+    data = request.get_json()
+
+    # support both "slot" (old) & "time_slot" (new)
+    slot = data.get("time_slot") or data.get("slot")
+
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip()
+    phone = (data.get("phone") or "").strip()
+    guests = int(data.get("guests") or 1)
+    table_no = int(data.get("table") or 1)
+
+    if not slot or not name or not email:
+        return jsonify({"error": "missing required fields"}), 400
 
     with engine.begin() as conn:
         result = conn.execute(text("""
@@ -82,8 +102,10 @@ def reserve():
             "table": table_no
         })
 
-        res = result.fetchone()
-        return jsonify({"message": "Reservation confirmed", "reservation_id": res.id}), 200
+    res = result.fetchone()
+    return jsonify({"message": "Reservation confirmed", "reservation_id": res.id}), 200
+        
+    
 
 # ----------------- ADMIN ROUTE -----------------
 
@@ -103,16 +125,58 @@ def admin_reservations():
         """)).mappings().all()
 
     return jsonify(list(rows)), 200
+# ---------------- PUBLIC: join newsletter ----------------
+@app.post("/api/newsletter")
+def newsletter():
+    data = request.json or {}
+    name  = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip()
+    phone = (data.get("phone") or "").strip()
 
-# ----------------- HEALTH CHECK -----------------
+    if not email:
+        return jsonify({"error": "email is required"}), 400
 
+    with engine.begin() as conn:
+        # customers table: id (pk), name, email, phone, newsletter (bool)
+        conn.execute(text("""
+            INSERT INTO customers (name, email, phone, newsletter)
+            VALUES (:name, :email, :phone, TRUE)
+            ON CONFLICT (email) DO UPDATE
+               SET name = EXCLUDED.name,
+                   phone = EXCLUDED.phone,
+                   newsletter = TRUE
+        """), {"name": name, "email": email, "phone": phone})
+
+    return jsonify({"ok": True}), 200
+
+
+# ---------------- ADMIN: list customers ------------------
+@app.get("/api/admin/customers")
+def admin_customers():
+    if not require_admin(request):
+        return jsonify({"error": "unauthorized"}), 401
+
+    with engine.begin() as conn:
+        rows = conn.execute(text("""
+            SELECT id, name, email, phone, newsletter
+            FROM customers
+            ORDER BY id DESC
+            LIMIT 200
+        """)).mappings().all()
+
+    return jsonify(list(rows)), 200
+
+# HEALTH CHECKS ------------
 @app.get("/")
 def home():
     return jsonify({"status": "running"}), 200
-# ---- HEALTH CHECK ----
-@app.route("/api/health", methods=["GET"])
+
+@app.get("/health")
 def health():
     return jsonify({"status": "ok"}), 200
-# Run local
+
+@app.get("/ping")
+def ping():
+    return jsonify({"pong": True}), 200
 if __name__ == "__main__":
     app.run(debug=True)
