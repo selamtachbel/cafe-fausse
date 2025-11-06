@@ -187,6 +187,6 @@ def version():
 with app.app_context():
     for r in app.url_map.iter_rules():
         app.logger.info("ROUTE: %s %s", ",".join(sorted(r.methods - {'HEAD', 'OPTIONS'})), r.rule)
-# if __name__ == "__main__":
-  #  app.run(debug=True)
+if __name__ == "__main__":
+   app.run(debug=True)
  
